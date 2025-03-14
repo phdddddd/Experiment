@@ -53,6 +53,19 @@ void perform_rdma_write(struct rdma_cm_id *id, const void *local_buffer, size_t 
         goto cleanup_qp;
     }
 
+    // 接收服务器的远程地址和RKey
+    uint64_t remote_addr;
+    uint32_t rkey;
+    if (rdma_get_recv_comp(id, NULL) || rdma_get_recv_comp(id, NULL)) {
+        perror("rdma_get_recv_comp");
+        goto cleanup_mr;
+    }
+    if (rdma_post_recv(id, NULL, &remote_addr, sizeof(remote_addr), NULL) ||
+        rdma_post_recv(id, NULL, &rkey, sizeof(rkey), NULL)) {
+        perror("rdma_post_recv");
+        goto cleanup_mr;
+    }
+
     // 设置RDMA Write的工作请求（WR）
     sge.addr = (uintptr_t)local_buffer;
     sge.length = size;
@@ -61,8 +74,8 @@ void perform_rdma_write(struct rdma_cm_id *id, const void *local_buffer, size_t 
     wr.opcode = IBV_WR_RDMA_WRITE;
     wr.sg_list = &sge;
     wr.num_sge = 1;
-    wr.wr.rdma.remote_addr = (uintptr_t)((char *)(id->context));  // 这里需要服务器端提供的远程地址
-    wr.wr.rdma.rkey = *(uint32_t *)((char *)(id->context) + sizeof(uintptr_t));  // 这里需要服务器端提供的远程RKey
+    wr.wr.rdma.remote_addr = remote_addr;
+    wr.wr.rdma.rkey = rkey;
 
     // 执行RDMA Write
     if (ibv_post_send(id->qp, &wr, &bad_wr)) {
@@ -167,13 +180,6 @@ int main() {
     // 准备要发送的数据
     const char *data = "Hello, RDMA!";
     size_t size = strlen(data) + 1;
-
-    // 将服务器的远程地址和RKey存储在id->context中
-    uintptr_t remote_addr = (uintptr_t)id->qp->qp_num;  // 需要服务器提供实际的remote_addr
-    uint32_t rkey = id->qp->rkey;  // 需要服务器提供实际的rkey
-    id->context = malloc(sizeof(remote_addr) + sizeof(rkey));
-    memcpy(id->context, &remote_addr, sizeof(remote_addr));
-    memcpy((char *)id->context + sizeof(remote_addr), &rkey, sizeof(rkey));
 
     // 执行RDMA Write
     perform_rdma_write(id, data, size);
