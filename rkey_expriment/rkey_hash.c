@@ -4,8 +4,8 @@
 #include <infiniband/verbs.h>
 #include <string.h>
 
-#define NUM_MR 4090     // MR 数量
-#define MR_SIZE 1024      // 每个 MR 的内存大小
+#define NUM_MR 100000    // MR 数量
+#define MR_SIZE 64      // 每个 MR 的内存大小
 
 // 用于存放相邻差值及计数的结构体
 typedef struct {
