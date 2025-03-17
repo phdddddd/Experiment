@@ -1,10 +1,11 @@
+//gcc rkey_hash.c -o rkey_hash -libverbs -lrdmacm
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <infiniband/verbs.h>
 #include <string.h>
 
-#define NUM_MR 100000    // MR 数量
+#define NUM_MR 10000    // MR 数量
 #define MR_SIZE 64      // 每个 MR 的内存大小
 
 // 用于存放相邻差值及计数的结构体
