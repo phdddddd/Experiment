@@ -1,6 +1,7 @@
 #include <linux/module.h>
 #include <linux/bpf.h>
 #include <linux/time.h>
+#include<stdint.h>
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("RDMA Security");
@@ -9,10 +10,10 @@ MODULE_DESCRIPTION("QPN Mapping Management System");
 #define MAPPING_TIMEOUT 60 /* 60 seconds */
 
 struct qpn_mapping_entry {
-    u32 local_ip;
-    u32 remote_ip;
-    u32 local_qpn;
-    u32 remote_qpn;
+    uint32_t local_ip;
+    uint32_t remote_ip;
+    uint32_t local_qpn;
+    uint32_t remote_qpn;
     unsigned long last_active;
     struct list_head list;
 };
@@ -20,7 +21,7 @@ struct qpn_mapping_entry {
 static LIST_HEAD(active_mappings);
 static DEFINE_SPINLOCK(mapping_lock);
 static struct timer_list mapping_timer;
-void add_mapping_entry(u32 local_ip, u32 remote_ip, u32 local_qpn, u32 remote_qpn)
+void add_mapping_entry(uint32_t local_ip, uint32_t remote_ip, uint32_t local_qpn, uint32_t remote_qpn)
 {
     struct qpn_mapping_entry *new;
     unsigned long flags;
@@ -39,7 +40,7 @@ void add_mapping_entry(u32 local_ip, u32 remote_ip, u32 local_qpn, u32 remote_qp
     spin_unlock_irqrestore(&mapping_lock, flags);
 }
 
-struct qpn_mapping_entry *find_mapping(u32 local_ip, u32 remote_ip, u32 local_qpn)
+struct qpn_mapping_entry *find_mapping(uint32_t local_ip, uint32_t remote_ip, uint32_t local_qpn)
 {
     struct qpn_mapping_entry *entry;
     unsigned long flags;
@@ -88,9 +89,9 @@ void rdma_cm_connection_handler(struct rdma_cm_event *event)
     struct rdma_conn_param *conn_param = &event->param.conn;
     struct rdma_cm_id *id = event->id;
     
-    u32 local_qpn = id->qp->qp_num;
-    u32 remote_qpn = conn_param->responder_resources;
-    u32 remote_ip = ntohl(id->route.addr.dst_addr.sin_addr.s_addr);
+    uint32_t local_qpn = id->qp->qp_num;
+    uint32_t remote_qpn = conn_param->responder_resources;
+    uint32_t remote_ip = ntohl(id->route.addr.dst_addr.sin_addr.s_addr);
     
     add_mapping_entry(0, remote_ip, local_qpn, remote_qpn);
 }
@@ -99,8 +100,8 @@ void rdma_cm_disconnect_handler(struct rdma_cm_id *id)
 {
     struct qpn_mapping_entry *entry;
     unsigned long flags;
-    u32 local_qpn = id->qp->qp_num;
-    u32 remote_ip = ntohl(id->route.addr.dst_addr.sin_addr.s_addr);
+    uint32_t local_qpn = id->qp->qp_num;
+    uint32_t remote_ip = ntohl(id->route.addr.dst_addr.sin_addr.s_addr);
     
     spin_lock_irqsave(&mapping_lock, flags);
     
