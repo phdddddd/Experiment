@@ -599,8 +599,6 @@ void *detection_thread(void *arg) {
             .out_of_seq = read_hw_counter("/sys/class/infiniband/mlx5_0/ports/1/counters/out_of_sequence"),
             .dup_req = read_hw_counter("/sys/class/infiniband/mlx5_0/ports/1/counters/duplicate_request")
         };
-        
-        // 执行检测
         detect_A1(current_metrics);
         detect_A2(current_qp, prev_qp);
         detect_A3();
@@ -637,9 +635,6 @@ void *detection_thread(void *arg) {
     return NULL;
 }
 
-// ==========================
-// 流量捕获线程
-// ==========================
 void *capture_thread(void *arg) {
     char *device = "mlx5_0"; // 使用MLX5设备
     char errbuf[PCAP_ERRBUF_SIZE];
